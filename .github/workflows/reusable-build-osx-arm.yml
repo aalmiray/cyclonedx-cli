@@ -1,0 +1,42 @@
+name: BuildOsxArm
+
+on:
+  workflow_call:
+    inputs:
+      project-version:
+        required: true
+        type: string
+
+jobs:
+  build-osx-arm:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Dotnet
+        uses: actions/setup-dotnet@v3.0.2
+        with:
+          dotnet-version: '6.0'
+
+      # Create binaries
+      - name: Create binary
+        run: |
+          VERSION=${{ inputs.project-version }}
+          dotnet build --configuration Release
+          mkdir bin
+          dotnet publish src/cyclonedx/cyclonedx.csproj -r osx-arm64 --configuration Release /p:Version=$VERSION --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesInSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --output bin/osx-arm64
+
+      # It is enough to "ad-hoc" sign the binary, we don't need a valid developer certificate for now.
+      - name: Sign binary
+        run: |
+          codesign -f -s - bin/osx-arm64/cyclonedx
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          retention-days: 1
+          name: artifacts-osx-arm
+          path: |
+            bin/osx-arm64/cyclonedx

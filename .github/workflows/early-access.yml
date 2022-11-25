@@ -1,11 +1,8 @@
-name: Release
+name: EarlyAccess
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version'
-        required: true
+  push:
+    branches: [ main ]
 
 jobs:
   precheck:
@@ -26,16 +23,18 @@ jobs:
         id: vars
         shell: bash
         run: |
-          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          echo "VERSION=$(cat semver.txt)" >> $GITHUB_OUTPUT
 
   build:
     needs: [ precheck ]
+    if: endsWith(${{ needs.precheck.outputs.VERSION }}, '-SNAPSHOT')
     uses: aalmiray/cyclonedx-cli/.github/workflows/reusable-build.yml@main
     with:
       project-version: ${{ needs.precheck.outputs.VERSION }}
 
   build-osx-arm:
     needs: [ precheck ]
+    if: endsWith(${{ needs.precheck.outputs.VERSION }}, '-SNAPSHOT')
     uses: aalmiray/cyclonedx-cli/.github/workflows/reusable-build-osx-arm.yml@main
     with:
       project-version: ${{ needs.precheck.outputs.VERSION }}
@@ -43,7 +42,9 @@ jobs:
   release:
     name: Release
     needs: [ precheck, build, build-osx-arm ]
+    if: endsWith(${{ needs.precheck.outputs.VERSION }}, '-SNAPSHOT')
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -61,15 +62,6 @@ jobs:
         with:
           name: artifacts-osx-arm
           path: bin/osx-arm64
-
-      - name: Commit version
-        run: |
-          echo ${{ needs.precheck.outputs.VERSION }} > semver.txt
-          git add semver.txt
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Action"
-          git commit -a -m "Releasing version ${{ needs.precheck.outputs.VERSION }}"
-          git push origin main
 
       - name: Release
         uses: jreleaser/release-action@v2

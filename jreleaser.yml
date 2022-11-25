@@ -1,0 +1,43 @@
+project:
+  name: cyclonedx-cli
+  description: CycloneDX CLI tool for SBOM analysis, merging, diffs and format conversions.
+  links:
+    homepage: https://github.com/aalmiray/cyclonedx-cli
+  authors:
+    - OWASP Foundation
+  license: Apache-2.0
+  inceptionYear: 2020
+  stereotype: cli
+
+release:
+  github:
+    overwrite: true
+    changelog:
+      formatted: ALWAYS
+      format: '- {{commitShortHash}} {{commitTitle}}'
+      preset: conventional-commits
+      contributors:
+        format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'
+
+files:
+  artifacts:
+    - path:      'bin/linux-x64/cyclonedx'
+      transform: 'cyclonedx-linux-x64-{{projectVersion}}'
+    - path:      'bin/linux-musl-x64/cyclonedx'
+      transform: 'cyclonedx-linux-musl-x64-{{projectVersion}}'
+    - path:      'bin/linux-arm/cyclonedx'
+      transform: 'cyclonedx-linux-arm-{{projectVersion}}'
+    - path:      'bin/linux-arm64/cyclonedx'
+      transform: 'cyclonedx-linux-arm64-{{projectVersion}}'
+    - path:      'bin/win-x64/cyclonedx.exe'
+      transform: 'cyclonedx-win-x64-{{projectVersion}}.exe'
+    - path:      'bin/win-x86/cyclonedx.exe'
+      transform: 'cyclonedx-win-x86-{{projectVersion}}.exe'
+    - path:      'bin/win-arm/cyclonedx.exe'
+      transform: 'cyclonedx-win-arm-{{projectVersion}}.exe'
+    - path:      'bin/win-arm64/cyclonedx.exe'
+      transform: 'cyclonedx-win-arm64-{{projectVersion}}.exe'
+    - path:      'bin/osx-x64/cyclonedx'
+      transform: 'cyclonedx-osx-x64-{{projectVersion}}'
+    - path:      'bin/osx-arm64/cyclonedx'
+      transform: 'cyclonedx-osx-arm64-{{projectVersion}}'

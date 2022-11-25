@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      project-version:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Dotnet
+        uses: actions/setup-dotnet@v3.0.2
+        with:
+          dotnet-version: '6.0'
+
+      # The tests should have already been run during the PR workflow, so this is really just a sanity check
+      - name: Tests
+        run: dotnet test
+
+      # Create binaries
+      - name: Create binaries
+        run: |
+          VERSION=${{ inputs.project-version }}
+          dotnet build --configuration Release
+          mkdir bin
+          for runtime in linux-x64 linux-musl-x64 linux-arm linux-arm64 win-x64 win-x86 win-arm win-arm64 osx-x64
+          do
+            dotnet publish src/cyclonedx/cyclonedx.csproj -r $runtime --configuration Release /p:Version=$VERSION --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesInSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --output bin/$runtime
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          retention-days: 1
+          name: artifacts
+          path: |
+            bin
